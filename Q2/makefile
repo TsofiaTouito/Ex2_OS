@@ -3,12 +3,12 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall
 
 # Output executables
-SERVER = tcp_udp_server
-CLIENT = tcp_udp_client
+SERVER = server
+CLIENT = client
 
 # Source files
-SERVER_SRC = tcp_udp_server.cpp
-CLIENT_SRC = tcp_udp_client.cpp
+SERVER_SRC = server.cpp
+CLIENT_SRC = client.cpp
 
 # Object files
 SERVER_OBJ = $(SERVER_SRC:.cpp=.o)
