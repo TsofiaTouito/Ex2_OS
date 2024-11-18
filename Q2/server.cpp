@@ -16,12 +16,14 @@ long long hydrogen_atoms = 0;
 
 std::mutex atom_lock;
 
+// Molecule structure to store the atoms required for a molecule
 struct Molecule {
     int carbon;
     int hydrogen;
     int oxygen;
 };
 
+// Map of predefined molecules with their atom requirements
 const std::map<std::string, Molecule> molecules = {
     {"WATER", {0, 2, 1}},
     {"CARBON DIOXIDE", {1, 0, 2}},
@@ -29,7 +31,7 @@ const std::map<std::string, Molecule> molecules = {
     {"ALCOHOL", {2, 6, 1}}
 };
 
-// Parse atom addition commands
+// Parses atom addition commands like "ADD CARBON 10"
 bool parseAtomCommand(const std::string& command, std::string& atom, long long& count) {
     std::istringstream iss(command);
     std::string add;
@@ -42,7 +44,7 @@ bool parseAtomCommand(const std::string& command, std::string& atom, long long& 
     return true;
 }
 
-// Process atom addition
+// Processes atom addition commands
 std::string processAtomCommand(const std::string& command) {
     std::string atom;
     long long count;
@@ -55,20 +57,17 @@ std::string processAtomCommand(const std::string& command) {
     if (atom == "CARBON") {
         if (carbon_atoms + count > MAX_ATOMS) return "error: carbon atoms limit exceeded";
         carbon_atoms += count;
-        std::cout << "Added " << count << " Carbon" << std::endl;
     } else if (atom == "OXYGEN") {
         if (oxygen_atoms + count > MAX_ATOMS) return "error: oxygen atoms limit exceeded";
         oxygen_atoms += count;
-        std::cout << "Added " << count << " Oxygen" << std::endl;
     } else if (atom == "HYDROGEN") {
         if (hydrogen_atoms + count > MAX_ATOMS) return "error: hydrogen atoms limit exceeded";
         hydrogen_atoms += count;
-        std::cout << "Added " << count << " Hydrogen" << std::endl;
     }
     return "OK\r\n";
 }
 
-// Process molecule delivery
+// Processes molecule delivery commands like "DELIVER WATER 10"
 std::string processMoleculeCommand(const std::string& command) {
     std::istringstream iss(command);
     std::string deliver, molecule;
@@ -91,15 +90,13 @@ std::string processMoleculeCommand(const std::string& command) {
         carbon_atoms -= required_c;
         hydrogen_atoms -= required_h;
         oxygen_atoms -= required_o;
-        std::cout << "Delivered " << count << " " << molecule << std::endl;
         return "OK\r\n";
     }
 
-    std::cout << "Failed to deliver " << count << " " << molecule << std::endl;
     return "ERROR\r\n";
 }
 
-// TCP Server
+// TCP server to accept atom addition commands
 void tcpServer(int port) {
     int server_fd, new_socket;
     struct sockaddr_in address;
@@ -149,10 +146,8 @@ void tcpServer(int port) {
 
                 std::string command(buffer);
                 command.erase(command.find_last_not_of("\r\n") + 1); // Remove trailing CRLF
-                std::cout << "TCP command received: " << command << std::endl;
 
                 std::string response = processAtomCommand(command);
-                std::cout << "Response: " << response << std::endl; // Log the response
                 send(new_socket, response.c_str(), response.size(), 0);
             }
             close(new_socket);
@@ -160,7 +155,7 @@ void tcpServer(int port) {
     }
 }
 
-// UDP Server
+// UDP server to handle molecule delivery commands
 void udpServer(int port) {
     int sockfd;
     char buffer[1024];
@@ -193,16 +188,14 @@ void udpServer(int port) {
             std::string command(buffer);
             command.erase(command.find_last_not_of("\r\n") + 1); // Remove trailing CRLF
 
-            std::cout << "UDP command received: " << command << std::endl;
-
             std::string response = processMoleculeCommand(command);
-            std::cout << "Response: " << response << std::endl; // Log the response
             sendto(sockfd, response.c_str(), response.size(), 0, (const struct sockaddr*)&cliaddr, len);
         }
     }
 }
 
 int main() {
+    // Start TCP and UDP server threads
     std::thread tcp_thread(tcpServer, 8080);
     std::thread udp_thread(udpServer, 8081);
 
